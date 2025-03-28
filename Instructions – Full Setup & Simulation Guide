@@ -1,0 +1,136 @@
+🛠️ Instructions – Full Setup & Simulation Guide
+This guide outlines the full setup process for deploying a honeypot VM in Azure, integrating it with Azure Sentinel (SIEM), simulating cyberattacks, and analyzing real-time alerts using KQL queries and dashboards.
+
+☁️ 1. Set Up Log Analytics Workspace
+Go to Azure Portal → search for Log Analytics Workspaces.
+
+Click + Create → provide:
+
+Workspace name (e.g., SentinelWorkspace01)
+
+Resource Group (create new or use existing)
+
+Region: Choose the same as your future VM
+
+Once created, go to Advanced Settings:
+
+Note the Workspace ID and Primary Key. You’ll need these to connect agents later.
+
+🧠 2. Deploy Azure Sentinel
+Navigate to Azure Sentinel via the search bar or All Services.
+
+Click + Add → select the Log Analytics Workspace you just created.
+
+Azure Sentinel is now enabled on that workspace, ready to collect and analyze logs.
+
+🧱 3. Deploy a Honeypot Virtual Machine (Windows)
+Go to Virtual Machines → Create > Virtual Machine.
+
+Use these settings:
+
+Image: Windows Server 2019 or 2022
+
+Size: B2s or similar (small instance)
+
+Inbound ports: Open RDP (port 3389) – this will allow brute-force attacks.
+
+Public IP: Assign a static IP for consistent testing.
+
+After deployment, note the public IP address and admin credentials.
+
+🕵️ 4. Install Log Analytics Agent on VM
+Download the Microsoft Monitoring Agent (MMA) inside your Windows VM.
+
+Use the Workspace ID and Primary Key from Step 1.
+
+Select Azure Commercial cloud.
+
+This links your VM to your Log Analytics Workspace for log collection.
+
+💥 5. Simulate a Brute-Force Attack
+From another machine (e.g., Kali Linux or another cloud VM):
+
+Clone this repository:
+
+bash
+Copy
+Edit
+git clone https://github.com/YOUR-USERNAME/YOUR-REPO.git
+cd YOUR-REPO
+Run the RDP brute-force attack script:
+
+bash
+Copy
+Edit
+python3 rdp_brute_force.py --target [VM_PUBLIC_IP] --user Admin --wordlist wordlist.txt
+The script will attempt multiple failed logins to trigger alerts in Sentinel.
+
+🔌 6. Connect Data Sources in Sentinel
+Go to Azure Sentinel > Configuration > Data Connectors:
+
+Enable and configure:
+
+Security Events (from the VM)
+
+Sign-in logs
+
+Azure Activity Logs
+
+Validate that logs are flowing to Log Analytics Workspace > Logs.
+
+🔍 7. Analyze Logs with KQL Queries
+Go to Azure Sentinel > Logs.
+
+Start with a simple failed login detection:
+
+kql
+Copy
+Edit
+SecurityEvent
+| where EventID == 4625
+| summarize FailedLogins = count() by Account, IPAddress, bin(TimeGenerated, 1h)
+| where FailedLogins > 5
+Explore and refine queries using:
+
+SecurityEvent, SigninLogs, Heartbeat, etc.
+
+Save useful queries under Query Packs.
+
+📊 8. Create Dashboards & Workbooks
+Go to Workbooks → Create a new workbook.
+
+Add:
+
+Line charts for failed logins over time.
+
+Maps to track attacker geolocation via IP.
+
+KPI tiles to display brute-force attempts and successful logins.
+
+Save and pin dashboards to your Sentinel overview.
+
+🚨 9. Build Alerts & Automation
+Under Analytics Rules, create:
+
+Scheduled Rules to monitor for brute-force patterns.
+
+Custom Rule Templates using your KQL queries.
+
+Optional: Use Logic Apps to build automated playbooks for:
+
+Email/SMS alerts
+
+Blocking IPs
+
+Opening tickets in tools like ServiceNow
+
+✅ Outcome
+After setup and simulation, you will:
+
+Successfully monitor cyberattack behaviors in a cloud environment.
+
+Visualize threats using dashboards and map-based analytics.
+
+Detect brute-force RDP attempts and other anomalies in real-time.
+
+Prove hands-on experience with SIEM, KQL, PowerShell, and cloud security engineering.
